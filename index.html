@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>音乐播放器</title>
+  <link rel="stylesheet" href="style.css" />
+  <meta name="description" content="简洁温馨的音乐播放器 - 通过 URL 参数播放音频文件" />
+</head>
+<body>
+  <!-- 背景漂浮装饰 -->
+  <div class="decoration decoration-1"></div>
+  <div class="decoration decoration-2"></div>
+  <div class="decoration decoration-3"></div>
+  <div class="decoration decoration-4"></div>
+
+  <div class="player-container glass-card">
+    <!-- 圆形专辑封面（播放时旋转） -->
+    <div class="album-art" aria-label="Album Art">
+      <div class="album-inner">
+        <span class="music-icon" aria-hidden="true">🎵</span>
+      </div>
+    </div>
+
+    <!-- 正在播放：封面下方（将根据URL参数更新） -->
+    <div class="now-playing" id="nowPlaying">正在播放：—</div>
+
+    <!-- 进度条 -->
+    <div class="progress-container" id="progressContainer" aria-label="进度条">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- 时间 -->
+    <div class="time-display">
+      <span id="currentTime">0:00</span>
+      <span id="duration">0:00</span>
+    </div>
+
+    <!-- 控制按钮：仅播放/暂停 -->
+    <div class="controls" role="group" aria-label="播放控制">
+      <button id="playBtn" class="control-btn play-btn" title="播放/暂停" aria-label="播放">▶</button>
+    </div>
+
+    <!-- 音量：左侧喇叭按钮 + 滑块（无“音量”文字） -->
+    <div class="volume-control" aria-label="音量">
+      <button id="muteBtn" class="mute-btn" aria-label="静音/恢复" title="静音/恢复">
+        <!-- 音量图标 -->
+        <svg class="icon icon-volume" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path d="M4 10v4a1 1 0 0 0 1 1h3.382a1 1 0 0 1 .724.31l3.94 4.155A1 1 0 0 0 15 18.69V5.31a1 1 0 0 0-1.954-.775l-3.94 4.155a1 1 0 0 1-.724.31H5a1 1 0 0 0-1 1Z" fill="currentColor"/>
+          <path d="M17.657 6.343a6 6 0 0 1 0 11.314" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M19.778 4.222a9 9 0 0 1 0 15.556" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <!-- 静音图标 -->
+        <svg class="icon icon-mute" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path d="M4 10v4a1 1 0 0 0 1 1h3.382a1 1 0 0 1 .724.31l3.94 4.155A1 1 0 0 0 15 18.69V5.31a1 1 0 0 0-1.954-.775l-3.94 4.155a1 1 0 0 1-.724.31H5a1 1 0 0 0-1 1Z" fill="currentColor"/>
+          <path d="M18 8l-8 8M10 8l8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <input type="range" id="volume" class="volume-slider" min="0" max="1" step="0.1" value="0.7" aria-label="调整音量">
+    </div>
+  </div>
+
+  <audio id="audioPlayer"></audio>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const audioPlayer = document.getElementById('audioPlayer');
+      const playBtn = document.getElementById('playBtn');
+      const volumeControl = document.getElementById('volume');
+      const progressContainer = document.getElementById('progressContainer');
+      const progressBar = document.getElementById('progressBar');
+      const currentTimeEl = document.getElementById('currentTime');
+      const durationEl = document.getElementById('duration');
+      const nowPlaying = document.getElementById('nowPlaying');
+      const albumArt = document.querySelector('.album-art');
+      const muteBtn = document.getElementById('muteBtn');
+
+      // === 从 URL 参数读取音频文件名（与前两个示例一致的思路） ===
+      const params = new URLSearchParams(window.location.search);
+      const audioFile = params.get('audio'); // 期望形如 ?audio=baby.mp3
+
+      // 若缺少参数：提示错误并禁用控件（不新增任何UI，不改变样式）
+      if (!audioFile) {
+        nowPlaying.textContent = "错误：URL 中必须包含 audio 参数（如 ?audio=baby.mp3）";
+        disableControls();
+        return;
+      }
+
+      // 初始化播放器（保持原有交互不变）
+      initPlayer(audioFile);
+
+      function initPlayer(file) {
+        audioPlayer.src = `audio/${encodeURIComponent(file)}`;
+        nowPlaying.textContent = `正在播放：${file}`;
+
+        // 默认音量 & 监听
+        audioPlayer.volume = volumeControl.value;
+        volumeControl.addEventListener('input', function () {
+          audioPlayer.volume = this.value;
+          if (parseFloat(this.value) === 0) {
+            audioPlayer.muted = true;
+            muteBtn.classList.add('muted');
+          } else {
+            audioPlayer.muted = false;
+            muteBtn.classList.remove('muted');
+            lastVolume = this.value;
+          }
+        });
+
+        // 播放/暂停
+        playBtn.addEventListener('click', function () {
+          if (audioPlayer.paused) {
+            audioPlayer.play().catch(e => console.error('播放错误:', e));
+          } else {
+            audioPlayer.pause();
+          }
+          updatePlayBtn();
+        });
+
+        // 元数据加载
+        audioPlayer.addEventListener('loadedmetadata', () => {
+          durationEl.textContent = formatTime(audioPlayer.duration);
+          // 需要自动播放可取消注释
+          // audioPlayer.play().catch(() => {});
+        });
+
+        // 时间更新
+        audioPlayer.addEventListener('timeupdate', updateProgress);
+
+        // 播放状态动画
+        audioPlayer.addEventListener('play', () => {
+          updatePlayBtn();
+          albumArt.classList.add('spinning');
+        });
+        audioPlayer.addEventListener('pause', () => {
+          updatePlayBtn();
+          albumArt.classList.remove('spinning');
+        });
+        audioPlayer.addEventListener('ended', () => {
+          progressBar.style.width = '0%';
+          updatePlayBtn();
+          albumArt.classList.remove('spinning');
+        });
+
+        // 进度条点击跳转
+        progressContainer.addEventListener('click', function (e) {
+          if (!audioPlayer.duration) return;
+          const rect = this.getBoundingClientRect();
+          const clickX = e.clientX - rect.left;
+          const width = rect.width;
+          audioPlayer.currentTime = (clickX / width) * audioPlayer.duration;
+        });
+
+        // 静音按钮
+        let lastVolume = volumeControl.value; // 记录上次音量
+        muteBtn.addEventListener('click', function () {
+          if (audioPlayer.muted || audioPlayer.volume === 0) {
+            audioPlayer.muted = false;
+            const v = parseFloat(lastVolume || 0.7);
+            audioPlayer.volume = v;
+            volumeControl.value = v;
+            muteBtn.classList.remove('muted');
+          } else {
+            audioPlayer.muted = true;
+            lastVolume = volumeControl.value;
+            audioPlayer.volume = 0;
+            volumeControl.value = 0;
+            muteBtn.classList.add('muted');
+          }
+        });
+
+        audioPlayer.load();
+      }
+
+      function updateProgress() {
+        if (audioPlayer.duration) {
+          const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+          progressBar.style.width = `${percent}%`;
+          currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+        }
+      }
+
+      function updatePlayBtn() {
+        playBtn.innerHTML = audioPlayer.paused ? '▶' : '⏸';
+        playBtn.setAttribute('aria-label', audioPlayer.paused ? '播放' : '暂停');
+      }
+
+      function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+      }
+
+      function disableControls() {
+        playBtn.disabled = true;
+        volumeControl.disabled = true;
+        muteBtn.disabled = true;
+        progressBar.style.width = '0%';
+      }
+    });
+  </script>
+</body>
+</html>

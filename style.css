@@ -1,0 +1,144 @@
+/* ===== 基础与主题（柔和温馨 + 高级细节） ===== */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: "Arial Rounded MT Bold", "Arial", system-ui, -apple-system, sans-serif; }
+
+:root{
+  --bg-start: #fff1ec;
+  --bg-end:   #e9f7ff;
+  --peach:    #ffc7a9;
+  --rose:     #ff9fb7;
+  --sky:      #8fd3ff;
+  --ink:      #5a5a5a;
+  --muted:    #8e8e8e;
+  --glass:    rgba(255,255,255,0.55);
+  --glass-br: rgba(255,255,255,0.75);
+  --shadow:   0 20px 50px rgba(255, 159, 183, 0.18);
+}
+
+body {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+  background: radial-gradient(1200px 800px at 30% 20%, #fff9f6 0%, transparent 60%),
+              linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
+  padding: 28px; color: var(--ink); position: relative; overflow: hidden;
+}
+
+/* ===== 玻璃卡片容器 ===== */
+.player-container { width: 100%; max-width: 420px; text-align: center; position: relative; z-index: 10; }
+.glass-card{ padding: 28px 22px 24px; border-radius: 28px; background: var(--glass);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.45); box-shadow: var(--shadow); }
+
+/* ===== 背景装饰（更轻盈） ===== */
+.decoration { position: absolute; z-index: 1; border-radius: 50%; filter: blur(2px); opacity: 0.75; animation: float 6s ease-in-out infinite; }
+.decoration-1 { top: 8%; left: 5%; width: 56px; height: 56px; background: rgba(255, 207, 173, 0.5); animation-delay: 0s; }
+.decoration-2 { top: 15%; right: 8%; width: 36px; height: 36px; background: rgba(173, 216, 230, 0.5); animation-delay: 1.5s; }
+.decoration-3 { bottom: 22%; left: 6%; width: 30px; height: 30px; background: rgba(255, 182, 193, 0.45); animation-delay: 2.5s; }
+.decoration-4 { bottom: 12%; right: 5%; width: 42px; height: 42px; background: rgba(180, 230, 230, 0.45); animation-delay: 0.5s; }
+@keyframes float { 0%,100%{ transform: translateY(0) rotate(0) } 50%{ transform: translateY(-12px) rotate(4deg) }}
+
+/* ===== 专辑封面：圆形 + 旋转动画 ===== */
+.album-art{
+  width: 250px; height: 250px; margin: 6px auto 14px; border-radius: 50%;
+  background: conic-gradient(from 210deg, #ffd6e7, #ffe6d6, #d4f1ff, #ffd6e7);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+  display: grid; place-items: center; position: relative; overflow: hidden; border: 8px solid var(--glass-br);
+}
+.album-art::before{
+  content:""; position:absolute; inset:0;
+  background:
+    radial-gradient(circle at center, rgba(255,255,255,0.55) 0 6px, transparent 7px),
+    radial-gradient(circle at center, rgba(255,255,255,0.25) 0 38%, transparent 39%),
+    radial-gradient(circle at center, rgba(255,255,255,0.15) 0 65%, transparent 66%);
+  mix-blend-mode: soft-light;
+}
+.album-inner{ transform-origin: center; }
+.music-icon{ font-size: 84px; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.08)); }
+@keyframes spinDisc { from{ transform: rotate(0deg) } to{ transform: rotate(360deg) } }
+.spinning { animation: spinDisc 12s linear infinite; }
+
+/* ===== 正在播放（封面下方） ===== */
+.now-playing{ margin-bottom: 6px; font-size: 15px; color: var(--muted); letter-spacing: 0.2px; }
+
+/* ===== 进度条 ===== */
+.progress-container{
+  width: 100%; height: 10px; cursor: pointer; margin: 14px 0 16px;
+  background: rgba(255,255,255,0.7); border-radius: 999px; overflow: hidden;
+  outline: 1px solid rgba(255,255,255,0.55);
+}
+.progress-bar{ height: 100%; background: linear-gradient(90deg, var(--rose), var(--sky)); width: 0%; transition: width 0.25s ease; }
+
+/* ===== 时间 ===== */
+.time-display{ display: flex; justify-content: space-between; margin-bottom: 22px; color: var(--muted); font-size: 13px; }
+
+/* ===== 控制按钮 ===== */
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.play-btn {
+  width: 64px;      /* 原来84px，缩小 */
+  height: 64px;
+  font-size: 24px;  /* 原来28px，缩小 */
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(145deg, #cdeaff, #fde2ea);
+  color: #6a6a6a;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 22px rgba(143, 211, 255, 0.35), inset 0 1px 0 #fff;
+  transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
+}
+
+.play-btn:hover {
+  filter: brightness(1.05);
+}
+
+.play-btn:active {
+  transform: scale(.94);
+  box-shadow: 0 6px 14px rgba(143, 211, 255, .28), inset 0 1px 0 #fff;
+}
+
+/* ===== 音量（左侧精致喇叭按钮 + 滑块） ===== */
+.volume-control{ width: 100%; margin: 6px 0 6px; display: flex; align-items: center; gap: 10px; }
+.mute-btn{
+  width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.55);
+  background: linear-gradient(145deg, #ffffffaa, #ffeaeaaa);
+  display: grid; place-items: center; cursor: pointer; color: #666;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.08), inset 0 1px 0 #fff;
+  transition: transform .15s ease, box-shadow .2s ease, filter .2s ease, background .2s ease;
+}
+.mute-btn:hover{ filter: brightness(1.03); box-shadow: 0 10px 22px rgba(0,0,0,0.10), inset 0 1px 0 #fff; }
+.mute-btn:active{ transform: scale(.95); }
+.mute-btn .icon{ display: block; }
+.mute-btn .icon-mute{ display: none; }
+.mute-btn.muted .icon-volume{ display: none; }
+.mute-btn.muted .icon-mute{ display: block; }
+
+.volume-slider{
+  flex: 1; -webkit-appearance: none; appearance: none; height: 10px;
+  border-radius: 999px; background: rgba(255,255,255,0.75); outline: none;
+  border: 1px solid rgba(255,255,255,0.55);
+}
+.volume-slider::-webkit-slider-thumb{
+  -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
+  background: linear-gradient(145deg, #ffd3e1, #ffe7cf);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 0 #fff; cursor: pointer;
+}
+.volume-slider::-moz-range-thumb{
+  width: 22px; height: 22px; border-radius: 50%;
+  background: linear-gradient(145deg, #ffd3e1, #ffe7cf);
+  border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.15), inset 0 1px 0 #fff; cursor: pointer;
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 480px) {
+  .player-container{ padding: 0 12px; }
+  .album-art{ width: 210px; height: 210px; }
+  .controls{ gap: 18px; }
+  .control-btn{ width: 52px; height: 52px; font-size: 18px; }
+  .play-btn{ width: 72px; height: 72px; font-size: 24px; }
+}
